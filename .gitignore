@@ -1,2 +1,14 @@
+# bytecode files
 __pycache__/
-*.pyc
+*.py[cod]
+
+# IDE folders
+.vscode/
+.idea/
+
+# system specific clutter
+.DS_Store
+Thumbs.db
+
+# any log files
+*.log
