@@ -7,20 +7,47 @@ class Player:
         self.rect = pygame.Rect(pos[0] - VIRTUAL_TILE / 2, pos[1] - VIRTUAL_TILE / 2, VIRTUAL_TILE, VIRTUAL_TILE)
         self.velocity = pygame.math.Vector2(0, 0)
         
-        self.speed = 100
-        self.color = (255, 255, 0)
+        self.speed = 50
+
+        self.animations = {
+            "idle": self.load_animation("idle"),
+            "up": self.load_animation("walk_up"),
+            "down": self.load_animation("walk_down")
+        }
+        self.current_animation = self.animations["idle"]
+
+        self.current_frame = 0
+        self.animation_speed = 150
+        self.last_update = pygame.time.get_ticks()
         
         self.facing = "down"
 
+    def load_animation(self, name):
+        frames = []
+
+        for i in range(1, 9):
+            filename = "assets/player/" + name + "/" + str(i) + ".png"
+            image = pygame.image.load(filename).convert_alpha()
+
+            frames.append(image)
+        
+        return frames
+    
     def handle_input(self, event):
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_w]:
             self.velocity.y = -1
+
             self.facing = "up"
+            self.current_animation = self.animations["up"]
+
         elif keys[pygame.K_s]:
             self.velocity.y = 1
+
             self.facing = "down"
+            self.current_animation = self.animations["down"]
+
         elif keys[pygame.K_a]:
             self.velocity.x = -1
             self.facing = "left"
@@ -29,6 +56,14 @@ class Player:
             self.facing = "right"
 
     def move(self, map, dt):
+        if self.velocity == pygame.math.Vector2(0, 0):
+            self.current_animation = self.animations["idle"]
+
+        now = pygame.time.get_ticks()
+        if now - self.last_update > self.animation_speed:
+            self.current_frame = (self.current_frame + 1) % 8
+            self.last_update = now
+
         self.rect.x += self.velocity.x * self.speed * dt
         self.rect.y += self.velocity.y * self.speed * dt
 
@@ -58,4 +93,6 @@ class Player:
             "right": (200, 255, 200)
         }
 
-        pygame.draw.rect(surface, colors[self.facing], self.rect)
+        surface.blit(self.current_animation[self.current_frame], (self.rect.x, self.rect.y))
+
+        # pygame.draw.rect(surface, colors[self.facing], self.rect)

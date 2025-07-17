@@ -9,8 +9,7 @@ class GameplayScene(Scene):
     def __init__(self, game):
         super().__init__(game)
 
-        self.current_level = Level(1)
-
+        self.level = Level(1)
         self.player = Player((100, 100))
 
     def handle_event(self, event):
@@ -22,11 +21,8 @@ class GameplayScene(Scene):
         self.player.handle_input(event)
 
     def update(self, dt):
-        self.player.move(self.current_level.room, dt)
+        self.player.move(self.level.room, dt)
 
     def draw(self, screen):
-        screen.fill((0, 100, 0))
-
-        self.current_level.draw(screen)
-
+        self.level.draw(screen)
         self.player.draw(screen)
