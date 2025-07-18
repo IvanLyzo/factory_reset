@@ -46,5 +46,3 @@ class OfficeDrone(Enemy):
     
     def draw(self, surface):
         pygame.draw.rect(surface, (255, 255, 255), self.rect)
-
-        pass

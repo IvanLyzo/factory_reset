@@ -4,7 +4,9 @@ from core.scene import Scene
 from core.level import Level
 
 from entities.player import Player
+
 from entities.enemies.officedrone import OfficeDrone
+from entities.enemies.turret import Turret
 
 class GameplayScene(Scene):
 
@@ -17,6 +19,7 @@ class GameplayScene(Scene):
 
         self.enemies = []
         self.enemies.append(OfficeDrone((200, 200), [(250, 200), (250, 150), (200, 150), (200, 200)]))
+        self.enemies.append(Turret((100, 200)))
 
     def handle_event(self, event):
         if event.type == pygame.KEYDOWN:
