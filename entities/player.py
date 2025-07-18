@@ -5,7 +5,13 @@ from utils import *
 class Player:
 
     def __init__(self, pos):
-        self.rect = pygame.Rect(pos[0] - VIRTUAL_TILE / 2, pos[1] - VIRTUAL_TILE / 2, VIRTUAL_TILE, VIRTUAL_TILE)
+        self.rect = pygame.Rect(
+            pos[0] * VIRTUAL_TILE,
+            pos[1] * VIRTUAL_TILE + 8,  # +10 to place feet lower in tile
+            VIRTUAL_TILE,
+            8  # collision height only at the feet
+        )
+
         self.velocity = pygame.math.Vector2(0, 0)
         
         self.speed = 50
@@ -20,7 +26,7 @@ class Player:
         self.flip = False
 
         self.current_frame = 0
-        self.animation_speed = 150
+        self.animation_speed = 125
 
         self.last_update = pygame.time.get_ticks()
     
@@ -88,9 +94,16 @@ class Player:
     def found(self, enemy):
         print("Found me!")
 
+    def hit(self, pellet):
+        print("Hit me!")
+
     def draw(self, surface):
         img = self.current_animation[self.current_frame]
-        if self.flip == True:
+
+        if self.flip:
             img = pygame.transform.flip(img, True, False)
 
-        surface.blit(img, (self.rect.x, self.rect.y))
+        draw_x = self.rect.centerx - img.get_width() // 2
+        draw_y = self.rect.bottom - img.get_height()
+
+        surface.blit(img, (draw_x, draw_y))
