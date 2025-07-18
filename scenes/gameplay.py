@@ -13,8 +13,7 @@ class GameplayScene(Scene):
         self.player = Player((100, 100))
 
     def handle_event(self, event):
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 from scenes.menu import MenuScene
                 self.game.change_scene(MenuScene(self.game))
 

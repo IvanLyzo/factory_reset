@@ -18,9 +18,8 @@ class Button:
     def handle_click(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             pos = (event.pos[0] / SCREEN_SCALE, event.pos[1] / SCREEN_SCALE)
+            
             if self.rect.collidepoint(pos):
-                print("pressed")
-
                 if self.callback:
                     self.callback()
     

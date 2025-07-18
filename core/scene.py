@@ -6,7 +6,7 @@ class Scene:
     def handle_event(self, event):
         pass  # Override in subclass
 
-    def update(self):
+    def update(self, dt):
         pass  # Override in subclass
 
     def draw(self, screen):

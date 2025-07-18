@@ -12,15 +12,16 @@ class Player:
         self.animations = {
             "idle": self.load_animation("idle"),
             "up": self.load_animation("walk_up"),
-            "down": self.load_animation("walk_down")
+            "down": self.load_animation("walk_down"),
+            "side": self.load_animation("walk_side")
         }
         self.current_animation = self.animations["idle"]
+        self.flip = False
 
         self.current_frame = 0
         self.animation_speed = 150
+
         self.last_update = pygame.time.get_ticks()
-        
-        self.facing = "down"
 
     def load_animation(self, name):
         frames = []
@@ -34,26 +35,27 @@ class Player:
         return frames
     
     def handle_input(self, event):
-        keys = pygame.key.get_pressed()
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+            self.emp()
 
+        keys = pygame.key.get_pressed()
         if keys[pygame.K_w]:
             self.velocity.y = -1
-
-            self.facing = "up"
             self.current_animation = self.animations["up"]
 
         elif keys[pygame.K_s]:
             self.velocity.y = 1
-
-            self.facing = "down"
             self.current_animation = self.animations["down"]
 
         elif keys[pygame.K_a]:
             self.velocity.x = -1
-            self.facing = "left"
+            self.current_animation = self.animations["side"]
+            self.flip = True
+
         elif keys[pygame.K_d]:
             self.velocity.x = 1
-            self.facing = "right"
+            self.current_animation = self.animations["side"]
+            self.flip = False
 
     def move(self, map, dt):
         if self.velocity == pygame.math.Vector2(0, 0):
@@ -61,7 +63,7 @@ class Player:
 
         now = pygame.time.get_ticks()
         if now - self.last_update > self.animation_speed:
-            self.current_frame = (self.current_frame + 1) % 8
+            self.current_frame = (self.current_frame + 1) % len(self.current_animation)
             self.last_update = now
 
         self.rect.x += self.velocity.x * self.speed * dt
@@ -84,15 +86,12 @@ class Player:
         self.velocity.x = 0
         self.velocity.y = 0
 
+    def emp(self):
+        pass
+    
     def draw(self, surface):
-        # Placeholder: just color change for now
-        colors = {
-            "up": (255, 200, 200),
-            "down": (255, 255, 0),
-            "left": (200, 200, 255),
-            "right": (200, 255, 200)
-        }
+        img = self.current_animation[self.current_frame]
+        if self.flip == True:
+            img = pygame.transform.flip(img, True, False)
 
-        surface.blit(self.current_animation[self.current_frame], (self.rect.x, self.rect.y))
-
-        # pygame.draw.rect(surface, colors[self.facing], self.rect)
+        surface.blit(img, (self.rect.x, self.rect.y))
