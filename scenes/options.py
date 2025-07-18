@@ -1,4 +1,6 @@
-class OptionsScene:
+from core.scene import Scene
+
+class OptionsScene(Scene):
 
     def __init__(self, game):
         self.game = game

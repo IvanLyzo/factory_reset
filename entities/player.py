@@ -1,5 +1,6 @@
 import pygame
 from constants import *
+from utils import *
 
 class Player:
 
@@ -10,10 +11,10 @@ class Player:
         self.speed = 50
 
         self.animations = {
-            "idle": self.load_animation("idle"),
-            "up": self.load_animation("walk_up"),
-            "down": self.load_animation("walk_down"),
-            "side": self.load_animation("walk_side")
+            "idle": load_animation("player/idle"),
+            "up": load_animation("player/walk_up"),
+            "down": load_animation("player/walk_down"),
+            "side": load_animation("player/walk_side")
         }
         self.current_animation = self.animations["idle"]
         self.flip = False
@@ -22,17 +23,6 @@ class Player:
         self.animation_speed = 150
 
         self.last_update = pygame.time.get_ticks()
-
-    def load_animation(self, name):
-        frames = []
-
-        for i in range(1, 9):
-            filename = "assets/player/" + name + "/" + str(i) + ".png"
-            image = pygame.image.load(filename).convert_alpha()
-
-            frames.append(image)
-        
-        return frames
     
     def handle_input(self, event):
         if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
@@ -89,6 +79,9 @@ class Player:
     def emp(self):
         pass
     
+    def found(self, enemy):
+        print("Found me!")
+
     def draw(self, surface):
         img = self.current_animation[self.current_frame]
         if self.flip == True:
