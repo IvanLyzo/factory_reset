@@ -10,7 +10,17 @@ class Enemy:
         pass
 
     def update(self, dt, player):
+        if self.active == False:
+            self.disable_clock -= min(dt, self.disable_clock)
+
+            if self.disable_clock == 0:
+                self.active = True
+
         pass
 
+    def disable(self, time):
+        self.active = False
+        self.disable_clock = time
+    
     def draw(self, surface):
         pass

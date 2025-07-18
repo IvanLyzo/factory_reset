@@ -28,12 +28,12 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         
+        game.handle_event(event)
+        
     if game.request_quit:
         quit_game()
         
     dt = clock.tick(FPS) / 1000
-        
-    game.handle_event(event)
 
     # update
     game.update(dt)

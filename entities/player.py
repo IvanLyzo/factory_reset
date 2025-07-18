@@ -24,11 +24,7 @@ class Player:
 
         self.last_update = pygame.time.get_ticks()
     
-    def handle_input(self, event):
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-            self.emp()
-
-        keys = pygame.key.get_pressed()
+    def handle_input(self, keys):
         if keys[pygame.K_w]:
             self.velocity.y = -1
             self.current_animation = self.animations["up"]
@@ -76,8 +72,18 @@ class Player:
         self.velocity.x = 0
         self.velocity.y = 0
 
-    def emp(self):
-        pass
+    def emp(self, enemies):
+        print("emp active")
+
+        player_pos = pygame.math.Vector2(self.rect.center)
+
+        for enemy in enemies:
+            enemy_pos = pygame.math.Vector2(enemy.rect.center)
+            distance = player_pos.distance_to(enemy_pos)
+
+            if distance < 100:
+                print("disable")
+                enemy.disable(3)
     
     def found(self, enemy):
         print("Found me!")

@@ -19,21 +19,26 @@ class GameplayScene(Scene):
         self.enemies.append(OfficeDrone((200, 200), [(250, 200), (250, 150), (200, 150), (200, 200)]))
 
     def handle_event(self, event):
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
                 from scenes.menu import MenuScene
                 self.game.change_scene(MenuScene(self.game))
 
-        self.player.handle_input(event)
+            if event.key == pygame.K_SPACE:
+                self.player.emp(self.enemies)
 
     def update(self, dt):
+        keys = pygame.key.get_pressed()
+        self.player.handle_input(keys)
+
         self.player.move(self.level.room, dt)
 
         for enemy in self.enemies:
-             enemy.update(dt, self.player)
+            enemy.update(dt, self.player)
 
     def draw(self, screen):
         self.level.draw(screen)
         self.player.draw(screen)
 
         for enemy in self.enemies:
-             enemy.draw(screen)
+            enemy.draw(screen)

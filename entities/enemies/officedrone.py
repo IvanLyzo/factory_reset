@@ -16,6 +16,11 @@ class OfficeDrone(Enemy):
         pass
 
     def update(self, dt, player):
+        super().update(dt, player)
+
+        if self.active == False:
+            return
+
         # move to current target
         target = self.targets[self.target_index]
         if target[0] > self.rect.center[0]:
@@ -36,6 +41,9 @@ class OfficeDrone(Enemy):
         if self.rect.colliderect(player.rect):
             player.found(self)
 
+    def disable(self, time):
+        super().disable(time)
+    
     def draw(self, surface):
         pygame.draw.rect(surface, (255, 255, 255), self.rect)
 
