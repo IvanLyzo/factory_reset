@@ -24,10 +24,8 @@ class Player:
         }
         self.current_animation = self.animations["idle"]
         self.flip = False
-
         self.current_frame = 0
         self.animation_speed = 125
-
         self.last_update = pygame.time.get_ticks()
     
     def handle_input(self, keys):
@@ -49,7 +47,7 @@ class Player:
             self.current_animation = self.animations["side"]
             self.flip = False
 
-    def move(self, map, dt):
+    def move(self, solids, dt):
         if self.velocity == pygame.math.Vector2(0, 0):
             self.current_animation = self.animations["idle"]
 
@@ -61,9 +59,8 @@ class Player:
         self.rect.x += self.velocity.x * self.speed * dt
         self.rect.y += self.velocity.y * self.speed * dt
 
-        flat_map = [tile for row in map for tile in row]
-        for tile in flat_map:
-            if self.rect.colliderect(tile.rect) and tile.type.code == 1:
+        for tile in solids:
+            if self.rect.colliderect(tile.rect):
 
                 if self.velocity.x > 0:
                     self.rect.right = tile.rect.left

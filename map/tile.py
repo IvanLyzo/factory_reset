@@ -24,6 +24,7 @@ class Tile:
 class TileType(Enum):
     FLOOR = (0, False, "floor1.png")
     WALL = (1, True, "wall1.png")
+    ROOF = (2, True, "roof.png")
 
     def __init__(self, code, collision, filename):
         self.code = code
@@ -36,3 +37,7 @@ class TileType(Enum):
     def load_images(cls):
         for member in cls:
             member.image = pygame.image.load(f"assets/tiles/{member.filename}").convert()
+
+    @classmethod
+    def get_solids(cls):
+        return [1, 2]

@@ -1,36 +1,55 @@
 import pygame
 
 from constants import *
+from utils import *
+
 from entities.enemy import Enemy
 
 class Turret(Enemy):
 
-    def __init__(self, pos):
+    def __init__(self, pos, direction):
         super().__init__(pos)
 
+        self.direction = direction
+
         self.bullets = []
+        self.shot_frame = False
 
-        self.shoot_interval = 2
-        self.shoot_delay = 0
-
-        self.animation_speed = 500
+        self.animations = {
+            "fire": load_animation("enemies/turret")
+        }
+        self.current_animation = self.animations["fire"]
+        self.animation_speed = 125
 
         # TODO: connect to "fusebox" to allow disabling
 
     def update(self, dt, player):
         super().update(dt)
 
-        self.shoot_delay -= min(dt, self.shoot_delay)
-        if self.shoot_delay == 0:
+        if self.current_frame == 1 and self.shot_frame == False:
             self.shoot()
-            self.shoot_delay = self.shoot_interval
+            self.shot_frame = True
         
+        if self.current_frame == 2:
+            self.shot_frame = False
+
         for bullet in self.bullets:
             bullet.update(dt, player)
 
     def shoot(self):
-        # create new bullet
-        self.bullets.append(Pellet(self, self.rect.center, (0, -1)))
+        dir = (0, 0)
+
+        match self.direction:
+            case "UP":
+                dir = (0, -1)
+            case "RIGHT":
+                dir = (1, 0)
+            case "DOWN":
+                dir = (0, 1)
+            case "LEFT":
+                dir = (-1, 0)
+
+        self.bullets.append(Pellet(self, self.rect.center, dir))
     
     def remove_bullet(self, bullet):
         self.bullets.remove(bullet)
@@ -39,8 +58,17 @@ class Turret(Enemy):
         super().disable(time)
     
     def draw(self, surface):
-        super().draw(surface)
-        # pygame.draw.rect(surface, (255, 255, 255), self.rect)
+        img = self.current_animation[self.current_frame]
+
+        match self.direction:
+            case "RIGHT":
+                img = pygame.transform.rotate(img, 270)
+            case "DOWN":
+                img = pygame.transform.rotate(img, 180)
+            case "LEFT":
+                img = pygame.transform.rotate(img, 90)
+
+        super().draw(surface, img)
 
         for bullet in self.bullets:
             bullet.draw(surface)

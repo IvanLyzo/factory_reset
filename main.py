@@ -4,7 +4,7 @@ import pygame
 from constants import *
 
 from core.game import Game
-from core.tile import TileType
+from map.tile import TileType
 
 pygame.init()
 

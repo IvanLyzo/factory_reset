@@ -8,16 +8,7 @@ class Enemy:
         self.rect = pygame.Rect(pos[0] * VIRTUAL_TILE, pos[1] * VIRTUAL_TILE, VIRTUAL_TILE, VIRTUAL_TILE)
         self.active = True
 
-        self.animations = {
-            "idle": load_animation("player/idle"),
-            "up": load_animation("player/walk_up"),
-            "down": load_animation("player/walk_down"),
-            "side": load_animation("player/walk_side")
-        }
-        self.current_animation = self.animations["idle"]
-
         self.current_frame = 0
-
         self.last_update = pygame.time.get_ticks()
 
         pass
@@ -40,7 +31,5 @@ class Enemy:
         self.active = False
         self.disable_clock = time
     
-    def draw(self, surface):
-        img = self.current_animation[self.current_frame]
-
+    def draw(self, surface, img):
         surface.blit(img, (self.rect.x, self.rect.y))

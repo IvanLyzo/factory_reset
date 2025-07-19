@@ -1,6 +1,7 @@
 import pygame
 
 from constants import *
+from utils import *
 
 from entities.enemy import Enemy
 
@@ -9,6 +10,12 @@ class OfficeDrone(Enemy):
     def __init__(self, pos, targets):
         super().__init__(pos)
 
+        self.animations = {
+            "idle": load_animation("player/idle")
+        }
+        self.current_animation = self.animations["idle"]
+        self.animation_speed = 125
+
         self.speed = 50
 
         self.targets = []
@@ -16,8 +23,6 @@ class OfficeDrone(Enemy):
             self.targets.append((target[0] * VIRTUAL_TILE, target[1] * VIRTUAL_TILE))
 
         self.target_index = 0
-
-        self.animation_speed = 125
 
         pass
 
@@ -51,5 +56,6 @@ class OfficeDrone(Enemy):
         super().disable(time)
     
     def draw(self, surface):
-        super().draw(surface)
-        # pygame.draw.rect(surface, (255, 255, 255), self.rect)
+        img = self.current_animation[self.current_frame]
+
+        super().draw(surface, img)
