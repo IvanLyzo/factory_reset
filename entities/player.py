@@ -9,7 +9,7 @@ class Player:
 
         self.rect = pygame.Rect(pos[0] * VIRTUAL_TILE, pos[1] * VIRTUAL_TILE + 8, VIRTUAL_TILE, 8)
 
-        self.health_cap = 10 # TODO: remove temp health cap used for testing
+        self.health_cap = 100 # TODO: remove temp health cap used for testing
         self.current_health = self.health_cap
 
         self.velocity = pygame.math.Vector2(0, 0)
@@ -84,8 +84,6 @@ class Player:
         self.velocity.y = 0
 
     def emp(self, enemies):
-        print("emp active")
-
         player_pos = pygame.math.Vector2(self.rect.center)
 
         for enemy in enemies:

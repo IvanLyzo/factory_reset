@@ -1,7 +1,7 @@
 import pygame
 
-from constants import *
-from utils import *
+import constants
+import utils
 
 from entities.enemy import Enemy
 
@@ -10,9 +10,8 @@ class OfficeDrone(Enemy):
     def __init__(self, pos, targets):
         super().__init__(pos)
 
-        self.animations = {
-            "idle": load_animation("player/idle")
-        }
+        self.animations["idle"] = utils.load_animation("player/idle")
+        
         self.current_animation = self.animations["idle"]
         self.animation_speed = 125
 
@@ -20,11 +19,9 @@ class OfficeDrone(Enemy):
 
         self.targets = []
         for target in targets:
-            self.targets.append((target[0] * VIRTUAL_TILE, target[1] * VIRTUAL_TILE))
+            self.targets.append((target[0] * constants.VIRTUAL_TILE, target[1] * constants.VIRTUAL_TILE))
 
         self.target_index = 0
-
-        pass
 
     def update(self, dt, game):
         super().update(dt)

@@ -12,6 +12,7 @@ from entities.player import Player
 
 from entities.enemies.officedrone import OfficeDrone
 from entities.enemies.turret import Turret
+from entities.enemies.laser import Laser
 
 from ui.window import Window
 
@@ -33,9 +34,9 @@ class GameplayScene(Scene):
         self.player = Player((1, 1))
         self.stealth = True
 
-        self.generate_level(1)
+        self.generate_floor(2)
         
-    def generate_level(self, floor):
+    def generate_floor(self, floor):
         self.level = Level(floor)
 
         self.player.set_pos((self.level.player_spawn[0], self.level.player_spawn[1]))
@@ -46,7 +47,7 @@ class GameplayScene(Scene):
         self.level.load_room(index)
 
         if self.level.elevator != None:
-            self.elevator = Trigger(utils.get_bounds(self.level.elevator["tiles"]), lambda: self.generate_level(self.level.elevator["to_floor"]))
+            self.elevator = Trigger(utils.get_bounds(self.level.elevator["tiles"]), lambda: self.generate_floor(self.level.elevator["to_floor"]))
             self.elevator_room = True
         else:
             self.elevator_room = False
@@ -88,6 +89,9 @@ class GameplayScene(Scene):
             
             elif type == "TURRET":
                 enemies.append(Turret(spawn, enemy["direction"]))
+
+            elif type == "LASER":
+                enemies.append(Laser(spawn, enemy["catcher"], enemy["direction"]))
         
         return enemies
     

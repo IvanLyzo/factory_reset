@@ -40,8 +40,9 @@
                     ]
                 },
                 {
-                    "type": "TURRET",
+                    "type": "LASER",
                     "spawn": [3, 13],
+                    "catcher":[3, 1],
                     "direction": "UP"
                 },
                 {

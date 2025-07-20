@@ -1,7 +1,7 @@
 import pygame
 
-from constants import *
-from utils import *
+import constants
+import utils
 
 from entities.enemy import Enemy
 
@@ -15,11 +15,19 @@ class Turret(Enemy):
         self.bullets = []
         self.shot_frame = False
 
-        self.animations = {
-            "fire": load_animation("enemies/turret")
-        }
+        self.animations["fire"] = utils.load_animation("enemies/turret")
         self.current_animation = self.animations["fire"]
         self.animation_speed = 125
+
+        angle = 0
+        match self.direction:
+            case "RIGHT":
+                angle = 270
+            case "DOWN":
+                angle = 180
+            case "LEFT":
+                angle = 90
+        self.current_animation = [pygame.transform.rotate(frame, angle) for frame in self.current_animation]
 
         # TODO: connect to "fusebox" to allow disabling
 
@@ -27,17 +35,17 @@ class Turret(Enemy):
         if game.stealth == True:
             return
 
+        for bullet in self.bullets:
+            bullet.update(dt, game)
+
         super().update(dt)
 
-        if self.current_frame == 1 and self.shot_frame == False:
+        if self.current_frame == 1 and not self.shot_frame and self.active:
             self.shoot()
             self.shot_frame = True
         
         if self.current_frame == 2:
             self.shot_frame = False
-
-        for bullet in self.bullets:
-            bullet.update(dt, game)
 
     def shoot(self):
         dir = (0, 0)
@@ -63,14 +71,6 @@ class Turret(Enemy):
     def draw(self, surface):
         img = self.current_animation[self.current_frame]
 
-        match self.direction:
-            case "RIGHT":
-                img = pygame.transform.rotate(img, 270)
-            case "DOWN":
-                img = pygame.transform.rotate(img, 180)
-            case "LEFT":
-                img = pygame.transform.rotate(img, 90)
-
         super().draw(surface, img)
 
         for bullet in self.bullets:
@@ -81,7 +81,7 @@ class Pellet:
     def __init__(self, turret, pos, dir):
         self.turret = turret
 
-        self.size = VIRTUAL_TILE / 8
+        self.size = constants.VIRTUAL_TILE / 8
 
         self.speed = 60
 
@@ -100,7 +100,7 @@ class Pellet:
             game.player.hit(10)
             game.trigger_alarm()
 
-        if self.rect.bottom < 0 or self.rect.top > VIRTUAL_HEIGHT or self.rect.right < 0 or self.rect.left > VIRTUAL_WIDTH:
+        if self.rect.bottom < 0 or self.rect.top > constants.VIRTUAL_HEIGHT or self.rect.right < 0 or self.rect.left > constants.VIRTUAL_WIDTH:
             self.turret.remove_bullet(self)
 
         for obj in game.level.get_solids():
