@@ -16,6 +16,9 @@ class Level:
     def load_room(self, index):
         room = self.level["rooms"][index]
 
+        self.player_spawn = self.level["player_spawn"]
+        self.elevator = room.get("elevator")
+
         self.enemies = room["enemies"]
         self.doors = room["doors"]
 
@@ -33,7 +36,7 @@ class Level:
                     case 2:
                         self.tilemap[y].append(Tile((x, y), TileType.ROOF))
     
-    def get_walls(self):
+    def get_solids(self):
         tiles = [tile for row in self.tilemap for tile in row]
 
         objs = []

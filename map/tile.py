@@ -10,9 +10,9 @@ class Tile:
 
         self.rect = pygame.Rect(
             pos[0] * VIRTUAL_TILE,
-            pos[1] * VIRTUAL_TILE + 6,  # +10 to place feet lower in tile
+            pos[1] * VIRTUAL_TILE + 6,
             VIRTUAL_TILE,
-            10  # collision height only at the feet
+            10
         )
         self.type = type
 

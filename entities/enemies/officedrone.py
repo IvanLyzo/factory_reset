@@ -26,7 +26,7 @@ class OfficeDrone(Enemy):
 
         pass
 
-    def update(self, dt, player):
+    def update(self, dt, game):
         super().update(dt)
 
         if self.active == False:
@@ -49,8 +49,8 @@ class OfficeDrone(Enemy):
             self.target_index = (self.target_index + 1) % len(self.targets)
         
         # check if "found" player
-        if self.rect.colliderect(player.rect):
-            player.found(self)
+        if self.rect.colliderect(game.player.get_hitbox()):
+            game.trigger_alarm()
 
     def disable(self, time):
         super().disable(time)

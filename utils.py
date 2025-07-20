@@ -13,6 +13,12 @@ def load_animation(path, frame_count=8):
     
     return frames
 
+def load_img(path):
+    filename = "assets/" + path + ".png"
+    image = pygame.image.load(filename).convert_alpha()
+
+    return image
+
 def get_bounds(tiles):
     xs = [t[0] for t in tiles]
     ys = [t[1] for t in tiles]

@@ -1,9 +1,10 @@
-class Text:
+class UIElement:
 
-    def __init__(self, pos, text, font):
+    def __init__(self, pos, text, font, callback=None):
         self.pos = pos
         self.text = text
         self.font = font
+        self.callback = callback
 
         self.text_surface = self.font.render(self.text, True, (255, 255, 255))
         self.text_rect = self.text_surface.get_rect(center=self.pos)

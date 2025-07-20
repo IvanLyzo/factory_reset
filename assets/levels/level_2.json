@@ -29,6 +29,26 @@
                 }
             ],
             "enemies": [
+                {
+                    "type": "DRONE",
+                    "spawn": [10, 10],
+                    "targets": [
+                        [13, 10],
+                        [13, 13],
+                        [10, 13],
+                        [10, 10]
+                    ]
+                },
+                {
+                    "type": "TURRET",
+                    "spawn": [3, 13],
+                    "direction": "UP"
+                },
+                {
+                    "type": "TURRET",
+                    "spawn": [1, 7],
+                    "direction": "RIGHT"
+                }
             ]
         },
         {
@@ -51,7 +71,7 @@
             ],
             "elevator": {
                 "tiles": [[19, 7], [19, 8]],
-                "to_floor": 2
+                "to_floor": 1
             },
             "doors": [
                 {
@@ -62,6 +82,26 @@
                 }
             ],
             "enemies": [
+                {
+                    "type": "DRONE",
+                    "spawn": [10, 10],
+                    "targets": [
+                        [13, 10],
+                        [13, 13],
+                        [10, 13],
+                        [10, 10]
+                    ]
+                },
+                {
+                    "type": "TURRET",
+                    "spawn": [3, 13],
+                    "direction": "UP"
+                },
+                {
+                    "type": "TURRET",
+                    "spawn": [1, 7],
+                    "direction": "RIGHT"
+                }
             ]
         }
     ]

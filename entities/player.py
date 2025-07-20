@@ -5,15 +5,14 @@ from utils import *
 class Player:
 
     def __init__(self, pos):
-        self.rect = pygame.Rect(
-            pos[0] * VIRTUAL_TILE,
-            pos[1] * VIRTUAL_TILE + 8,  # +10 to place feet lower in tile
-            VIRTUAL_TILE,
-            8  # collision height only at the feet
-        )
+        self.alive = True
+
+        self.rect = pygame.Rect(pos[0] * VIRTUAL_TILE, pos[1] * VIRTUAL_TILE + 8, VIRTUAL_TILE, 8)
+
+        self.health_cap = 10 # TODO: remove temp health cap used for testing
+        self.current_health = self.health_cap
 
         self.velocity = pygame.math.Vector2(0, 0)
-        
         self.speed = 50
 
         self.animations = {
@@ -27,6 +26,12 @@ class Player:
         self.current_frame = 0
         self.animation_speed = 125
         self.last_update = pygame.time.get_ticks()
+    
+    def set_pos(self, pos):
+        self.rect = pygame.Rect(pos[0] * VIRTUAL_TILE, pos[1] * VIRTUAL_TILE + 8, VIRTUAL_TILE, 8)
+    
+    def get_hitbox(self):
+        return pygame.Rect(self.rect.left, self.rect.top - 8, self.rect.width, self.rect.height + 8)
     
     def handle_input(self, keys):
         if keys[pygame.K_w]:
@@ -47,7 +52,7 @@ class Player:
             self.current_animation = self.animations["side"]
             self.flip = False
 
-    def move(self, solids, dt):
+    def update(self, game, dt):
         if self.velocity == pygame.math.Vector2(0, 0):
             self.current_animation = self.animations["idle"]
 
@@ -59,18 +64,21 @@ class Player:
         self.rect.x += self.velocity.x * self.speed * dt
         self.rect.y += self.velocity.y * self.speed * dt
 
-        for tile in solids:
-            if self.rect.colliderect(tile.rect):
+        for obj in game.solids:
+            if obj == self:
+                continue
+
+            if self.rect.colliderect(obj.rect):
 
                 if self.velocity.x > 0:
-                    self.rect.right = tile.rect.left
+                    self.rect.right = obj.rect.left
                 elif self.velocity.x < 0:
-                    self.rect.left = tile.rect.right
+                    self.rect.left = obj.rect.right
 
                 if self.velocity.y > 0:
-                    self.rect.bottom = tile.rect.top
+                    self.rect.bottom = obj.rect.top
                 elif self.velocity.y < 0:
-                    self.rect.top = tile.rect.bottom
+                    self.rect.top = obj.rect.bottom
 
         self.velocity.x = 0
         self.velocity.y = 0
@@ -87,12 +95,17 @@ class Player:
             if distance < 100:
                 print("disable")
                 enemy.disable(3)
-    
-    def found(self, enemy):
-        print("Found me!")
 
-    def hit(self, pellet):
-        print("Hit me!")
+    def hit(self, dmg):
+        self.current_health -= min(dmg, self.current_health)
+
+        if self.current_health == 0:
+            print("die once") # TODO: reset level on death (+ possibly other things)
+            self.health_cap -= min(25, self.health_cap)
+            print("lowered health to ", self.health_cap)
+            if self.health_cap == 0:
+                self.alive = False
+            self.current_health = self.health_cap
 
     def draw(self, surface):
         img = self.current_animation[self.current_frame]
