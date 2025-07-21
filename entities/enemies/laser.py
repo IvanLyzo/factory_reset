@@ -1,65 +1,76 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from windows.gamewindow import GameWindow
+
 import pygame
 
 import constants
 import utils
 
+from map.tile import Direction
+
 from entities.enemy import Enemy
+from entities.enemies.fusebox import Fusebox
 
 class Laser(Enemy):
 
-    def __init__(self, pos, catcher_pos, direction):
+    def __init__(self, pos: pygame.math.Vector2, catcher_pos: pygame.math.Vector2, fusebox_pos: pygame.math.Vector2, direction: Direction):
         super().__init__(pos)
 
-        self.catcher_rect = pygame.Rect(catcher_pos[0] * constants.VIRTUAL_TILE, catcher_pos[1] * constants.VIRTUAL_TILE, constants.VIRTUAL_TILE, constants.VIRTUAL_TILE)
-        self.collided = False
+        self.direction: Direction = direction
+        print(catcher_pos)
+        self.catcher_rect: pygame.Rect = pygame.Rect(catcher_pos.x * constants.VIRTUAL_TILE, catcher_pos.y * constants.VIRTUAL_TILE, constants.VIRTUAL_TILE, constants.VIRTUAL_TILE)
+        self.laser_rect: pygame.Rect = self.gen_laser()
+        self.collided: bool = False
 
-        self.direction = direction
-
+        # TODO: art: art art for catcher and laser
         self.animations["fire"] = utils.load_animation("enemies/turret")
-        self.current_animation = self.animations["fire"]
-        self.catcher_animation = self.animations["fire"]
-        self.animation_speed = 125
 
-        match self.direction:
-            case "RIGHT":
-                angle = 270
-                self.laser_rect = pygame.Rect(
-                    self.rect.right + constants.VIRTUAL_TILE / 4,
-                    self.rect.centery - constants.VIRTUAL_TILE / 8,
-                    self.catcher_rect.left - constants.VIRTUAL_TILE / 4 - self.rect.right,
-                    constants.VIRTUAL_TILE / 4
-                )
-            case "DOWN":
-                angle = 180
-                self.laser_rect = pygame.Rect(
-                    self.rect.centerx - constants.VIRTUAL_TILE / 8,
-                    self.rect.bottom + constants.VIRTUAL_TILE / 4,
-                    constants.VIRTUAL_TILE / 4,
-                    self.catcher_rect.top - constants.VIRTUAL_TILE / 4 - self.rect.bottom
-                )
-            case "LEFT":
-                angle = 90
-                self.laser_rect = pygame.Rect(
-                    self.catcher_rect.right + constants.VIRTUAL_TILE / 4,
-                    self.rect.centery - constants.VIRTUAL_TILE / 8,
-                    self.rect.left - self.catcher_rect.right - constants.VIRTUAL_TILE / 4,
-                    constants.VIRTUAL_TILE / 4
-                )
-            case "UP":
-                angle = 0
-                self.laser_rect = pygame.Rect(
-                    self.rect.centerx - constants.VIRTUAL_TILE / 8,
-                    self.catcher_rect.centery,
-                    constants.VIRTUAL_TILE / 4,
-                    self.rect.centery - self.catcher_rect.centery
-                )
+        self.current_animation: list[pygame.Surface] = [pygame.transform.rotate(frame, self.direction.img_angle) for frame in self.animations["fire"]]
+        self.catcher_animation: list[pygame.Surface] = [pygame.transform.rotate(frame, (self.direction.img_angle + 180) % 360) for frame in self.animations["fire"]]
 
-        self.current_animation = [pygame.transform.rotate(frame, angle) for frame in self.current_animation]
-        self.catcher_animation = [pygame.transform.rotate(frame, (angle + 180) % 360) for frame in self.catcher_animation]
+        self.fusebox: Fusebox = Fusebox(fusebox_pos, self)
 
-        # TODO: connect to "fusebox" to allow disabling
+    def gen_laser(self):
+        vec: pygame.math.Vector2 = self.direction.vector
+        thickness: int = int(constants.VIRTUAL_TILE / 4)
 
-    def update(self, dt, game):
+        # horizontal laser
+        if vec.x != 0:
+            # laser pos
+            x = self.rect.centerx
+            y = self.rect.centery - thickness / 2
+
+            # laser dimensions
+            width = abs(self.catcher_rect.centerx - self.rect.centerx)
+            height = thickness
+            
+            # adjust x for left-facing laser (x has to be left for drawing)
+            if vec.x < 0:
+                x -= width
+        
+        # vertical laser
+        else:
+            # laser pos
+            x = self.rect.centerx - thickness / 2
+            y = self.rect.centery
+
+            # laser dimensions
+            width = thickness
+            height = abs(self.catcher_rect.centery - self.rect.centery)
+            
+            # adjust y for up-facing laser (y has to be top for drawing)
+            if vec.y < 0:
+                y -= height
+
+        return pygame.Rect(x, y, width, height)
+
+    def update(self, dt: float, game: GameWindow):
+        if self.fusebox.activated:
+            game.start_minigame(self.fusebox)
+
         super().update(dt)
 
         if self.laser_rect.colliderect(game.player.get_hitbox()) and not self.collided:
@@ -70,11 +81,14 @@ class Laser(Enemy):
         elif not self.laser_rect.colliderect(game.player.get_hitbox()):
             self.collided = False
 
-    def draw(self, surface):
-        laser_img = self.current_animation[self.current_frame]
-        catcher_img = self.catcher_animation[self.current_frame]
+    def draw(self, surface: pygame.Surface):
+        laser_img: pygame.Surface = self.current_animation[self.current_frame]
+        catcher_img: pygame.Surface = self.catcher_animation[self.current_frame]
         
-        surface.blit(laser_img, (self.rect.x, self.rect.y))
-        surface.blit(catcher_img, (self.catcher_rect.x, self.catcher_rect.y))
+        surface.blit(laser_img, self.rect.topleft)
+        surface.blit(catcher_img, self.catcher_rect.topleft)
 
         pygame.draw.rect(surface, (200, 10, 10), self.laser_rect)
+
+        # draw fusebox
+        self.fusebox.draw(surface)

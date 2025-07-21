@@ -1,13 +1,13 @@
 import pygame
-from constants import *
-from utils import *
+import constants
+import utils
 
 class Player:
 
     def __init__(self, pos):
         self.alive = True
 
-        self.rect = pygame.Rect(pos[0] * VIRTUAL_TILE, pos[1] * VIRTUAL_TILE + 8, VIRTUAL_TILE, 8)
+        self.rect = pygame.Rect(pos[0] * constants.VIRTUAL_TILE, pos[1] * constants.VIRTUAL_TILE + 8, constants.VIRTUAL_TILE, 8)
 
         self.health_cap = 100 # TODO: remove temp health cap used for testing
         self.current_health = self.health_cap
@@ -16,10 +16,10 @@ class Player:
         self.speed = 50
 
         self.animations = {
-            "idle": load_animation("player/idle"),
-            "up": load_animation("player/walk_up"),
-            "down": load_animation("player/walk_down"),
-            "side": load_animation("player/walk_side")
+            "idle": utils.load_animation("player/idle"),
+            "up": utils.load_animation("player/walk_up"),
+            "down": utils.load_animation("player/walk_down"),
+            "side": utils.load_animation("player/walk_side")
         }
         self.current_animation = self.animations["idle"]
         self.flip = False
@@ -27,8 +27,8 @@ class Player:
         self.animation_speed = 125
         self.last_update = pygame.time.get_ticks()
     
-    def set_pos(self, pos):
-        self.rect = pygame.Rect(pos[0] * VIRTUAL_TILE, pos[1] * VIRTUAL_TILE + 8, VIRTUAL_TILE, 8)
+    def set_pos(self, pos: pygame.math.Vector2):
+        self.rect = pygame.Rect(pos.x * constants.VIRTUAL_TILE, pos.y * constants.VIRTUAL_TILE + 8, constants.VIRTUAL_TILE, 8)
     
     def get_hitbox(self):
         return pygame.Rect(self.rect.left, self.rect.top - 8, self.rect.width, self.rect.height + 8)

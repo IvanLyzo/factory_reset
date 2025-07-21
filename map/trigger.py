@@ -1,14 +1,20 @@
+import pygame
+
+from collections.abc import Callable
+
+from entities.player import Player
+
 class Trigger:
-    def __init__(self, rect, on_enter):
-        self.rect = rect
-        self.on_enter = on_enter
+    def __init__(self, rect: pygame.Rect, on_enter: Callable[[], None]):
+        self.rect: pygame.Rect = rect
+        self.on_enter: Callable[[], None] = on_enter
 
-        self.triggered = False
+        self.triggered: bool = False
 
-    def check(self, player):
+    def check(self, player: Player):
         if self.rect.colliderect(player.rect):
             if not self.triggered:
-                self.on_enter()  # Call the event
+                self.on_enter()
                 self.triggered = True
         else:
-            self.triggered = False  # Reset when player leaves
+            self.triggered = False

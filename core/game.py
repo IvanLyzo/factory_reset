@@ -1,28 +1,31 @@
 import pygame
 
-from scenes.menu import MenuScene
+from ui.window import Window
+from windows.titlewindow import TitleWindow
 
 class Game:
 
     def __init__(self):
-        self.title_font = pygame.font.Font("assets/PressStart2P-Regular.ttf", 16)
-        self.normal_font = pygame.font.Font("assets/PressStart2P-Regular.ttf", 8)
+        # put these in seperate class
+        self.title_font: pygame.font.Font = pygame.font.Font("assets/PressStart2P-Regular.ttf", 16)
+        self.normal_font: pygame.font.Font = pygame.font.Font("assets/PressStart2P-Regular.ttf", 8)
 
-        self.request_quit = False
+        self.request_quit: bool = False
 
-        self.current_scene = MenuScene(self)
+        self.current_scene: Window = TitleWindow(self)
+        self.current_scene.active = True
 
-    def handle_event(self, event):
+    def handle_event(self, event: pygame.event.Event):
         self.current_scene.handle_event(event)
 
-    def update(self, dt):
+    def update(self, dt: float):
         self.current_scene.update(dt)
     
-    def draw(self, screen):
+    def draw(self, screen: pygame.Surface):
         self.current_scene.draw(screen)
 
-    def change_scene(self, new_scene):
-        self.current_scene = new_scene
+    def change_scene(self, new_window: Window):
+        self.current_scene = new_window
 
     def quit(self):
         self.request_quit = True

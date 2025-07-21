@@ -43,6 +43,7 @@
                     "type": "LASER",
                     "spawn": [3, 13],
                     "catcher":[3, 1],
+                    "fusebox": [2, 13],
                     "direction": "UP"
                 },
                 {
