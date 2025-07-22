@@ -18,12 +18,10 @@ from entities.enemies.laser import Laser
 class Floor:
 
     def __init__(self, game: "GameWindow", floor: int,):
-        
-        with open("assets/levels/level_" + str(floor) + ".json", 'r') as data:
-            self.level = json.load(data)
+        self.level = utils.load_json("levels/level_" + str(floor))
 
-            self.player_spawn: pygame.math.Vector2 = pygame.math.Vector2(self.level["player_spawn"][0], self.level["player_spawn"][1])
-            self.load_room(game, 0)
+        self.player_spawn: pygame.math.Vector2 = pygame.math.Vector2(self.level["player_spawn"][0], self.level["player_spawn"][1])
+        self.load_room(game, 0)
 
     def load_room(self, game: "GameWindow", room_index: int):
         room: list[list[int]] = self.level["rooms"][room_index]

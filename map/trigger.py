@@ -12,7 +12,7 @@ class Trigger:
         self.triggered: bool = False
 
     def check(self, player: Player):
-        if self.rect.colliderect(player.rect):
+        if self.rect.colliderect(player.collision_rect):
             if not self.triggered:
                 self.on_enter()
                 self.triggered = True

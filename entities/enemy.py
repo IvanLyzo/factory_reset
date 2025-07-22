@@ -1,39 +1,38 @@
 import pygame
-
 import constants
-import utils
 
-class Enemy:
+from core.gameobject import GameObject
 
-    def __init__(self, pos: pygame.math.Vector2):
-        self.rect: pygame.Rect = pygame.Rect(pos.x * constants.VIRTUAL_TILE, pos.y * constants.VIRTUAL_TILE, constants.VIRTUAL_TILE, constants.VIRTUAL_TILE)
-        self.active: bool = True
+# base Enemy class that inherits GameObject and acts as superclass for all enemy types
+class Enemy(GameObject):
 
-        self.animations: dict[str, list[pygame.Surface]] = {}
-        self.animation_speed: int = 125
+    def __init__(self, pos: pygame.math.Vector2, solid: bool, base_height: int = 8):
 
-        self.current_frame: int = 0
-        self.last_update: int = pygame.time.get_ticks()
+        # call super init (after converting tilemap pos to pixel pos - all enemies will pass in tilemap pos from JSON data)
+        super().__init__(pygame.math.Vector2(pos.x * constants.VIRTUAL_TILE, pos.y * constants.VIRTUAL_TILE), solid, base_height)
 
+        # time until enabled again
         self.disable_clock: float = 0
 
+    # update enemies
     def update(self, dt: float):
+
+        # if not active
         if self.active == False:
+
+            # count down until 0 (active)
             self.disable_clock -= min(dt, self.disable_clock)
 
+            # enable once clock reached 0
             if self.disable_clock == 0:
                 self.active = True
             
             return
 
-        now: int = pygame.time.get_ticks()
-        if now - self.last_update > self.animation_speed:
-            self.current_frame = (self.current_frame + 1) % len(self.current_animation)
-            self.last_update = now
+        # update superclass if active
+        super().update()
 
+    # disable enemy for given time
     def disable(self, time: float):
         self.active = False
         self.disable_clock = time
-    
-    def draw(self, surface: pygame.Surface, img: pygame.Surface):
-        surface.blit(img, self.rect.topleft)

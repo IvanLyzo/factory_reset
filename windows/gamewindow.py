@@ -3,11 +3,14 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from core.game import Game
+    from windows.titlewindow import TitleWindow
 
 import pygame
 from enum import Enum
 
 import constants
+
+from core.gameobject import GameObject
 
 from map.floor import Floor
 from map.trigger import Trigger
@@ -37,7 +40,6 @@ class GameWindow(Window):
     def __init__(self, game: Game):
         super().__init__(0)
         self.game: Game = game
-
         self.game_state: GameState = GameState.PLAY
 
         self.pause_menu: MenuWindow = MenuWindow(40, parent=self)
@@ -49,17 +51,19 @@ class GameWindow(Window):
         self.death_menu.add_element(50, "Restart", self.game.normal_font, callback=self.restart)
         self.death_menu.add_element(65, "Quit", self.game.normal_font, callback=self.return_main) # TODO: make fonts more universal (put in constants or utils probably (give them names after HTML for readability))
 
-        self.player: Player = Player((1, 1))
+        self.player: Player = Player(pygame.math.Vector2(1, 1))
         self.stealth: bool = True
 
         self.active_fusebox: Fusebox | None = None
-
-        self.generate_floor(2)
         
-    def generate_floor(self, floor: int):
+        self.current_floor = 0
+        self.gen_floor(2)
+        
+    def gen_floor(self, floor: int):
+        self.current_floor = floor
         self.floor: Floor = Floor(self, floor)
 
-        self.player.set_pos(self.floor.player_spawn)
+        self.player.move_to(pygame.math.Vector2(self.floor.player_spawn.x * constants.VIRTUAL_TILE, self.floor.player_spawn.y * constants.VIRTUAL_TILE))
     
     def switch_room(self, room_index: int, door_index: int | None = None):
         self.floor.load_room(self, room_index)
@@ -68,13 +72,12 @@ class GameWindow(Window):
             door: Trigger = self.floor.doors.get(door_index)
             door.triggered = True
 
-            self.player.set_pos(pygame.math.Vector2(door.rect.centerx / constants.VIRTUAL_TILE, door.rect.centery / constants.VIRTUAL_TILE))
+            self.player.move_to(pygame.math.Vector2(door.rect.centerx, door.rect.centery))
     
     def restart(self):
         self.game.change_scene(GameWindow(self.game))
     
     def return_main(self):
-        from windows.titlewindow import TitleWindow
         self.game.change_scene(TitleWindow(self.game))
     
     def trigger_alarm(self):
@@ -97,7 +100,7 @@ class GameWindow(Window):
                 if event.key == pygame.K_e:
                     for enemy in self.floor.enemies:
                         if isinstance(enemy, Laser):
-                            enemy.fusebox.interect(self.player)
+                            enemy.fusebox.interect(self)
 
                 if event.key == pygame.K_SPACE:
                     self.player.emp(self.floor.enemies)
@@ -135,14 +138,22 @@ class GameWindow(Window):
                 self.active_fusebox.update(dt)
 
             case GameState.PLAY:
-                if self.game_state.paused:
-                    return
-                
-                if self.player.alive == False:
+                if self.player.active == False:
                     self.game_state = GameState.ENDED
                     self.death_menu.active = True
 
-                self.solids = [*self.floor.get_solids(), *[enemy for enemy in self.floor.enemies if not isinstance(enemy, OfficeDrone)], self.player]
+                if self.player.died == True:
+                    self.gen_floor(self.current_floor)
+                    self.stealth = True
+
+                    self.player.died = False
+
+                self.solids: list[GameObject | pygame.Rect] = [
+                    self.player, # player
+                    *self.floor.get_solids(), # solid tiles
+                    *[enemy for enemy in self.floor.enemies if not isinstance(enemy, OfficeDrone)], # enemies excluding drones
+                    *[laser.catcher for laser in self.floor.enemies if isinstance(laser, Laser)] # catchers of all lasers
+                    ]
                 
                 keys = pygame.key.get_pressed()
                 self.player.handle_input(keys)
@@ -163,7 +174,7 @@ class GameWindow(Window):
         self.floor.draw_floor(screen)
 
         # draw every "3D" object from top to bottom for 3D effect
-        objs = sorted(self.solids, key=lambda obj: obj.rect.bottom)
+        objs = sorted(self.solids, key=lambda obj: obj.collision_rect.bottom)
         for obj in objs:
             obj.draw(screen)
 

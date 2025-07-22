@@ -1,4 +1,5 @@
 import pygame
+import json
 
 from constants import *
 
@@ -18,6 +19,10 @@ def load_img(path):
     image = pygame.image.load(filename).convert_alpha()
 
     return image
+
+def load_json(path):
+    with open("assets/" + path + ".json", 'r') as data:
+        return json.load(data)
 
 def get_bounds(tiles):
     xs = [t[0] for t in tiles]

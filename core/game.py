@@ -3,6 +3,7 @@ import pygame
 from ui.window import Window
 from windows.titlewindow import TitleWindow
 
+# game manager class
 class Game:
 
     def __init__(self):

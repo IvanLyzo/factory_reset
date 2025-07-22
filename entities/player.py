@@ -1,117 +1,151 @@
+# imports used to delay certain module imports to avoid ciruclar import
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+# delayed imports
+if TYPE_CHECKING:
+    from windows.gamewindow import GameWindow
+
+# normal imports
 import pygame
+
 import constants
 import utils
 
-class Player:
+from core.gameobject import GameObject
+from entities.enemy import Enemy
 
-    def __init__(self, pos):
-        self.alive = True
+# user-controlled player class inherits GameObject
+class Player(GameObject):
 
-        self.rect = pygame.Rect(pos[0] * constants.VIRTUAL_TILE, pos[1] * constants.VIRTUAL_TILE + 8, constants.VIRTUAL_TILE, 8)
+    def __init__(self, pos: pygame.math.Vector2):
+        super().__init__(pos, True)
 
-        self.health_cap = 100 # TODO: remove temp health cap used for testing
-        self.current_health = self.health_cap
+        # boolean if died
+        self.died: bool = False
 
-        self.velocity = pygame.math.Vector2(0, 0)
-        self.speed = 50
+        self.health_cap: int = 100 # current player health cap
+        self.current_health: int = self.health_cap # current player health
 
+        self.velocity: pygame.math.Vector2 = pygame.math.Vector2(0, 0) # frame velocity
+        self.speed: int = 50 # speed (px/sec)
+
+        # setup animation fields for player (inherited from superclass GameObject)
         self.animations = {
             "idle": utils.load_animation("player/idle"),
             "up": utils.load_animation("player/walk_up"),
             "down": utils.load_animation("player/walk_down"),
             "side": utils.load_animation("player/walk_side")
         }
-        self.current_animation = self.animations["idle"]
-        self.flip = False
-        self.current_frame = 0
-        self.animation_speed = 125
-        self.last_update = pygame.time.get_ticks()
+        self.current_animation: list[pygame.Surface] = self.animations["idle"]
+        
+        # player variable for left/right movement
+        self.flip: bool = False
     
-    def set_pos(self, pos: pygame.math.Vector2):
-        self.rect = pygame.Rect(pos.x * constants.VIRTUAL_TILE, pos.y * constants.VIRTUAL_TILE + 8, constants.VIRTUAL_TILE, 8)
+    # def hitbox(self):
+    #     return pygame.Rect(self.rect.left, self.rect.top - 8, self.rect.width, self.rect.height + 8)
     
-    def get_hitbox(self):
-        return pygame.Rect(self.rect.left, self.rect.top - 8, self.rect.width, self.rect.height + 8)
-    
-    def handle_input(self, keys):
+    # handle all player-related key input
+    def handle_input(self, keys: list[int]):
+
+        # moving up
         if keys[pygame.K_w]:
             self.velocity.y = -1
             self.current_animation = self.animations["up"]
 
+        # moving down
         elif keys[pygame.K_s]:
             self.velocity.y = 1
             self.current_animation = self.animations["down"]
 
+        # moving left
         elif keys[pygame.K_a]:
             self.velocity.x = -1
             self.current_animation = self.animations["side"]
-            self.flip = True
+            self.flip = True # side sprite is right-facing, so set flip to true
 
+        # moving right
         elif keys[pygame.K_d]:
             self.velocity.x = 1
             self.current_animation = self.animations["side"]
-            self.flip = False
+            self.flip = False # side sprite is left-facing, no flip needed
 
-    def update(self, game, dt):
+    # update player
+    def update(self, game: GameWindow, dt: float):
+
+        # set idle animation if no movement this frame
         if self.velocity == pygame.math.Vector2(0, 0):
             self.current_animation = self.animations["idle"]
 
-        now = pygame.time.get_ticks()
-        if now - self.last_update > self.animation_speed:
-            self.current_frame = (self.current_frame + 1) % len(self.current_animation)
-            self.last_update = now
+        # superclass update
+        super().update()
 
-        self.rect.x += self.velocity.x * self.speed * dt
-        self.rect.y += self.velocity.y * self.speed * dt
+        # perform movement
+        if self.velocity != pygame.math.Vector2(0, 0):
+            self.move_to(self.pos + self.velocity * self.speed * dt)
 
+        # check for collisions
         for obj in game.solids:
-            if obj == self:
+
+            # skip if player (don't want player checking collision with itself)
+            if isinstance(obj, Player):
                 continue
 
-            if self.rect.colliderect(obj.rect):
+            # collision rect of current iterated game object
+            rect = obj.collision_rect
 
+            if self.collision_rect.colliderect(rect):
+                new_pos = self.pos.copy()
+
+                # Correct horizontal movement
                 if self.velocity.x > 0:
-                    self.rect.right = obj.rect.left
+                    new_pos.x = rect.left - self.collision_rect.width
                 elif self.velocity.x < 0:
-                    self.rect.left = obj.rect.right
+                    new_pos.x = rect.right
 
+                # Correct vertical movement
                 if self.velocity.y > 0:
-                    self.rect.bottom = obj.rect.top
+                    new_pos.y = rect.top - constants.VIRTUAL_TILE
                 elif self.velocity.y < 0:
-                    self.rect.top = obj.rect.bottom
+                    new_pos.y = rect.bottom - (constants.VIRTUAL_TILE - self.collision_rect.height)
 
-        self.velocity.x = 0
-        self.velocity.y = 0
+                self.move_to(new_pos)
 
-    def emp(self, enemies):
+        # reset velocity for next frame
+        self.velocity = pygame.math.Vector2()
+
+    # player emp ability (called by GameWindow)
+    def emp(self, enemies: list[Enemy]):
         player_pos = pygame.math.Vector2(self.rect.center)
 
         for enemy in enemies:
-            enemy_pos = pygame.math.Vector2(enemy.rect.center)
-            distance = player_pos.distance_to(enemy_pos)
+            enemy_pos: pygame.math.Vector2 = pygame.math.Vector2(enemy.rect.center)
+            distance: float = player_pos.distance_to(enemy_pos)
 
-            if distance < 100:
-                print("disable")
-                enemy.disable(3)
+            if distance < constants.EMP_RANGE:
+                enemy.disable(constants.EMP_TIME)
 
-    def hit(self, dmg):
+    def hit(self, dmg: int):
         self.current_health -= min(dmg, self.current_health)
 
         if self.current_health == 0:
-            print("die once") # TODO: reset level on death (+ possibly other things)
+            self.died = True
             self.health_cap -= min(25, self.health_cap)
-            print("lowered health to ", self.health_cap)
+
             if self.health_cap == 0:
-                self.alive = False
+                self.active = False
+            
             self.current_health = self.health_cap
 
-    def draw(self, surface):
-        img = self.current_animation[self.current_frame]
+    # draw player
+    def draw(self, surface: pygame.Surface):
 
+        # get correct frame of current animation
+        img: pygame.Surface = self.current_animation[self.current_frame]
+
+        # flip if needed
         if self.flip:
             img = pygame.transform.flip(img, True, False)
 
-        draw_x = self.rect.centerx - img.get_width() // 2
-        draw_y = self.rect.bottom - img.get_height()
-
-        surface.blit(img, (draw_x, draw_y))
+        # draw player from superclass
+        super().draw(surface, img)

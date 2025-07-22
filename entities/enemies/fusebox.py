@@ -3,14 +3,13 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from entities.enemies.laser import Laser
+    from windows.gamewindow import GameWindow
 
 import pygame
 
 import constants
 
 from windows.hackwindow import HackWindow
-
-from entities.player import Player
 
 class Fusebox():
 
@@ -21,17 +20,16 @@ class Fusebox():
         self.activated: bool = False
         self.tick_increment: float = 0
 
-        self.window = HackWindow()
+        self.window: HackWindow = HackWindow()
 
-    def interect(self, player: Player):
-        player_pos: pygame.math.Vector2 = pygame.math.Vector2(player.get_hitbox().center)
+    def interect(self, game: GameWindow):
+        player_pos: pygame.math.Vector2 = pygame.math.Vector2(game.player.hitbox().center)
 
         distance: float = player_pos.distance_to((self.rect.centerx, self.rect.centery))
         
-        if distance < constants.INTERACT_RANGE:
-            self.activated = True # TODO: dont need with minigame
+        if distance < constants.INTERACT_RANGE and game.stealth == True:
+            self.activated = True
             self.window.active = True
-            self.tick_increment = 0 # TODO: figure out how many times we can attemp minigame; might not need to reset here
 
     def update(self, dt: float):
         self.tick_increment += min(dt, 1 - self.tick_increment)
