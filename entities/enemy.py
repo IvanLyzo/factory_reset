@@ -31,8 +31,3 @@ class Enemy(GameObject):
 
         # update superclass if active
         super().update()
-
-    # disable enemy for given time
-    def disable(self, time: float):
-        self.active = False
-        self.disable_clock = time

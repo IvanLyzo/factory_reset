@@ -26,7 +26,7 @@ class Fusebox(GameObject):
         # setup animation fields for fusebox (inherited from superclass GameObject)
         self.animations["active"] = utils.load_animation("enemies/laser/fusebox/active")
         self.animations["disabled"] = utils.load_animation("enemies/laser/fusebox/disabled", 1)
-        self.current_animation: list[pygame.Surface] = self.animations["active"]
+        self.current_animation: list[pygame.Surface] = [pygame.transform.rotate(frame, self.laser.direction.img_angle) for frame in self.animations["active"]]
 
         # hack window
         self.window: HackWindow = HackWindow()
@@ -49,7 +49,7 @@ class Fusebox(GameObject):
         super().update()
 
         if self.window.state == HackState.PASSED:
-            self.current_animation = self.animations["disabled"]
+            self.current_animation = [pygame.transform.rotate(frame, self.laser.direction.img_angle) for frame in self.animations["disabled"]]
             self.current_frame = 0
 
             self.laser.active = False

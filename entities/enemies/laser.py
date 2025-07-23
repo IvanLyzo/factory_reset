@@ -146,8 +146,7 @@ class LaserCatcher(GameObject):
     
     # update
     def update(self):
-        if self.current_frame < len(self.current_animation) - 1:
-            super().update()
+        super().update()
 
     # draw LaserCatcer
     def draw(self, surface: pygame.Surface):

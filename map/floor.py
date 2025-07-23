@@ -33,9 +33,13 @@ class Floor:
         # load first room (room 0) immediately
         self.load_room(game, 0)
 
-    # parses and generates all data needed to load a room: tiles, triggers, and enemies
+    # parses and generates all data needed to load a room: tiles, triggers, and enemies, etc.
     def load_room(self, game: GameWindow, room_index: int):
         room: dict[str, Any] = self.level["rooms"][room_index]
+
+        # announce room announcement upon entry
+        announcement: str = room.get("announcement")
+        game.announcement_queue.append(announcement)
 
         self.gen_tilemap(room.get("grid"))
         self.gen_elevator(room.get("elevator"), game)

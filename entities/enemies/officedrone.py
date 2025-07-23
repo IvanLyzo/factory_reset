@@ -65,16 +65,18 @@ class OfficeDrone(Enemy):
 
         # set delta y
         if target.y > self.pos.y:
-            delta.y = min(self.speed * dt, target.x - self.pos.y)
+            delta.y = min(self.speed * dt, target.y - self.pos.y)
         elif target.y < self.pos.y:
             delta.y = -min(self.speed * dt, self.pos.y - target.y)
 
         # apply delta
         self.move_to(self.pos + delta)
 
-        # switch targets if needed (rotate if spillover)
-        if self.pos == self.targets[self.target_index]:
-            self.target_index = (self.target_index + 1) % len(self.targets)
+       # switch targets if close enough (avoids float errors from exact position check)
+        if self.pos.distance_to(self.targets[self.target_index]) < 1:
+            self.pos = self.targets[self.target_index]  # snap exactly to target
+            self.target_index = (self.target_index + 1) % len(self.targets)  # loop to next target
+
         
         # check if "found" player and passive (if agro what's the point, player already spotted)
         body: pygame.Rect = pygame.Rect(self.pos.x, self.pos.y, constants.VIRTUAL_TILE, constants.VIRTUAL_TILE)

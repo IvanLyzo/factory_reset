@@ -124,22 +124,13 @@ class Player(GameObject):
 
                 self.move_to(new_pos)
 
+        # clamp position to stay inside screen bounds (subtract width and height ensuring no part of sprite spills over)
+        clamped_x = max(0, min(self.pos.x, constants.VIRTUAL_WIDTH - self.collision_rect.width))
+        clamped_y = max(0, min(self.pos.y, constants.VIRTUAL_HEIGHT - self.collision_rect.height))
+        self.move_to(pygame.Vector2(clamped_x, clamped_y))
+
         # reset velocity for next frame
         self.velocity = pygame.math.Vector2()
-
-    # player emp ability (called by GameWindow)
-    def emp(self, enemies: list[Enemy]):
-        
-        # loop through enemies
-        for enemy in enemies:
-            if not isinstance(enemy, OfficeDrone):
-                return
-
-            distance: float = self.pos.distance_to(enemy.pos) # distance from player to enemy
-
-            # if in range, disable enemy for some time
-            if distance < constants.EMP_RANGE:
-                enemy.disable(constants.EMP_TIME)
 
     # hit function called to indicate damage player took
     def hit(self, dmg: int):

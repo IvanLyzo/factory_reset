@@ -1,5 +1,6 @@
 import pygame
 from enum import Enum
+import random
 
 import constants
 import utils
@@ -22,15 +23,24 @@ class HackWindow(Window):
         self.snake: list[pygame.math.Vector2] = []
 
         self.state: HackState = HackState.IN_PROGRESS
-        self.load_data()
 
-    def load_data(self):
-        data = utils.load_json("hackmaps")["maps"][0]
+    def load_data(self, floor: int):
+        # get maps data
+        maps = utils.load_json("hackmaps")["maps"]
+
+        # get random-ish index based on floor
+        map_index = random.randint(0, len(maps) - 1)
+        
+        # get current map data
+        data = maps[map_index]
+        
+        # create grid
         self.grid: list[list[int]] = data["grid"]
 
-        self.spawn: pygame.math.Vector2 = pygame.math.Vector2(data["spawn"][0], data["spawn"][1])
+        # spawn snake head
+        self.spawn: pygame.math.Vector2 = pygame.math.Vector2(*data["spawn"])
         self.snake.append(self.spawn)
-
+    
     def handle_event(self, event: pygame.event.Event):
         match event.key:
             case pygame.K_w:

@@ -31,6 +31,7 @@ class GameState(Enum):
     PAUSED = (1, True)
     MINIGAME = (2, True)
     ENDED = (3, True)
+    WON = (4, True)
 
     def __init__(self, id: int, paused: bool):
         self.id: int = id
@@ -58,6 +59,14 @@ class GameWindow(Window):
         self.death_menu.add_element(60, "Restart", constants.p, callback=self.restart)
         self.death_menu.add_element(100, "Quit", constants.p, callback=self.return_main)
 
+        # Win menu UI window setup
+        self.win_menu: MenuWindow = MenuWindow(40, parent=self)
+        self.win_menu.add_element(20, "Game Won!", constants.h1)
+        self.win_menu.add_element(40, "Thanks for playing", constants.p)
+        self.win_menu.add_element(55, "this prototype!", constants.p)
+        self.win_menu.add_element(80, "Restart", constants.p, callback=self.restart)
+        self.win_menu.add_element(120, "Quit", constants.p, callback=self.return_main)
+
         # Announcement menu UI window setup
         self.announcement_queue: list[str] = []
 
@@ -81,6 +90,12 @@ class GameWindow(Window):
         self.gen_floor(1)
         
     def gen_floor(self, floor: int):
+        # game won if floor is -1 (exit sign)
+        if floor == -1:
+            self.game_state = GameState.WON
+            self.win_menu.toggle()
+            return
+
         # Update current floor index
         self.current_floor = floor
 
@@ -98,6 +113,7 @@ class GameWindow(Window):
         # Load a new room in the current floor by index
         self.floor.load_room(self, room_index)
 
+        # if entered through a door (true for all except first rooms)
         if door_index is not None:
             # Mark the door trigger as triggered to avoid immediate re-trigger
             door: Trigger | None = self.floor.doors.get(door_index)
@@ -133,6 +149,9 @@ class GameWindow(Window):
         # Switch state to minigame and set current minigame window
         self.game_state = GameState.MINIGAME
         self.minigame = window
+
+        # Init map with floor for difficulty range
+        self.minigame.load_data(self.current_floor)
     
     def handle_event(self, event: pygame.event.Event):
         # Only handle keyboard keydown events
@@ -151,10 +170,6 @@ class GameWindow(Window):
                     for enemy in self.floor.enemies:
                         if isinstance(enemy, Laser):
                             enemy.fusebox.interact(self)
-
-                # Space key triggers EMP ability for player
-                if event.key == pygame.K_SPACE:
-                    self.player.emp(self.floor.enemies)
             
             case GameState.PAUSED:
                 # Pass input to pause menu UI
@@ -166,8 +181,10 @@ class GameWindow(Window):
 
             case GameState.MINIGAME:
                 # Pass input to current minigame UI window
-                if self.minigame is not None:
-                    self.minigame.handle_event(event)
+                self.minigame.handle_event(event)
+            case GameState.WON:
+                # Pass input to current minigame UI window
+                self.win_menu.handle_event(event)
 
     def update(self, dt: float):
         match self.game_state:
@@ -214,8 +231,6 @@ class GameWindow(Window):
                 # Handle announcements
                 if self.announcement_menu.active:
                     self.announcement_ui_countdown -= min(dt, self.announcement_ui_countdown)
-
-                    print(self.announcement_ui_countdown)
                     
                     # disable announcement
                     if self.announcement_ui_countdown == 0:
@@ -225,20 +240,19 @@ class GameWindow(Window):
                 self.announce()
 
             case GameState.MINIGAME:
-                if self.minigame is not None:
-                    # Update minigame window
-                    self.minigame.update(dt)
+                # Update minigame window
+                self.minigame.update(dt)
 
-                    # After minigame ends, return to play + trigger alarm on failure
-                    if self.minigame.state is not HackState.IN_PROGRESS:
-                        self.game_state = GameState.PLAY
-                        
-                        if self.minigame.state is HackState.FAILED:
-                            self.announcement_queue.append("Oopsies! Hack unsuccessfull!")
-                            self.trigger_alarm()
+                # After minigame ends, return to play + trigger alarm on failure
+                if self.minigame.state is not HackState.IN_PROGRESS:
+                    self.game_state = GameState.PLAY
+                    
+                    if self.minigame.state is HackState.FAILED:
+                        self.announcement_queue.append("Oopsies! Hack unsuccessfull!")
+                        self.trigger_alarm()
 
-                        else:
-                            self.announcement_queue.append("Hack successfull!")
+                    else:
+                        self.announcement_queue.append("Hack successfull!")
 
     def draw(self, screen: pygame.Surface):
         # Draw floor tiles (no 3D effect)
@@ -269,5 +283,6 @@ class GameWindow(Window):
                 self.death_menu.draw(screen)
         
             case GameState.MINIGAME:
-                if self.minigame is not None:
-                    self.minigame.draw(screen)
+                self.minigame.draw(screen)
+            case GameState.WON:
+                self.win_menu.draw(screen)

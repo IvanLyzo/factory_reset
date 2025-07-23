@@ -26,8 +26,7 @@ class TitleWindow(MenuWindow):
 
         # menu options with callbacks
         self.add_element(120, "Start", constants.p, callback=self.play)
-        self.add_element(160, "Options", constants.p, callback=self.options)
-        self.add_element(200, "Quit", constants.p, callback=game.quit)
+        self.add_element(160, "Quit", constants.p, callback=game.quit)
 
     # start the game by switching to GameWindow
     def play(self):

@@ -13,13 +13,9 @@ SCREEN_SCALE = 4
 screen_width = VIRTUAL_WIDTH * SCREEN_SCALE
 screen_height = VIRTUAL_HEIGHT * SCREEN_SCALE
 
-# interaction ranges in pixels
+# interaction range in pixels
 INTERACT_RANGE = VIRTUAL_TILE * 2
-
-EMP_RANGE = VIRTUAL_TILE * 5
-EMP_TIME = 3
 
 # fonts (to be initialized elsewhere)
 h1 = None
 p = None
-info = None
