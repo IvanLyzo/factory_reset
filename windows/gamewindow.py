@@ -88,11 +88,10 @@ class GameWindow(Window):
         if door_index is not None:
             # Mark the door trigger as triggered to avoid immediate re-trigger
             door: Trigger | None = self.floor.doors.get(door_index)
-            if door:
-                door.triggered = True
+            self.floor.doors.get(door_index).triggered = True
 
             # Move player to center of the door's rectangle
-            self.player.move_to(pygame.math.Vector2(door.rect.centerx, door.rect.centery))
+            self.player.move_to(pygame.math.Vector2(door.rect.left, door.rect.top))
     
     def restart(self):
         # Restart game by creating a fresh GameWindow instance
@@ -192,7 +191,7 @@ class GameWindow(Window):
                     # Update minigame window
                     self.minigame.update(dt)
 
-                    # After minigame ends, return to play or trigger alarm on failure
+                    # After minigame ends, return to play + trigger alarm on failure
                     if self.minigame.state is not HackState.IN_PROGRESS:
                         self.game_state = GameState.PLAY
                         

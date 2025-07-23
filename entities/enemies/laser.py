@@ -18,98 +18,115 @@ from map.tile import Direction
 
 from entities.enemy import Enemy
 from entities.enemies.fusebox import Fusebox
+from windows.hackwindow import HackState
 
 # Laser enemy type (inherits Enemy -> GameObject)
 class Laser(Enemy):
 
     def __init__(self, pos: pygame.math.Vector2, catcher_pos: pygame.math.Vector2, fusebox_pos: pygame.math.Vector2, direction: Direction):
-        super().__init__(pos, True, 16) # base_height is 16 because - like turret - laser is on the wall
+        super().__init__(pos, True, 16)  # base_height is 16 because laser is mounted on wall
 
-        # direction turret faces
+        # direction laser faces
         self.direction: Direction = direction
 
-        # TODO: art: art for catcher and laser
+        # setup animation fields for laser
         self.animations["active"] = utils.load_animation("enemies/laser/active", 1)
         self.animations["disabled"] = utils.load_animation("enemies/laser/disabled", 1)
         self.animations["deactive"] = utils.load_animation("enemies/laser/deactivate")
+
+        # start with active animation, rotated based on direction
         self.current_animation: list[pygame.Surface] = [pygame.transform.rotate(frame, self.direction.img_angle) for frame in self.animations["active"]]
 
-        # catcher enemy (laser cant just shoot into the wall - think of all the company expenses it would take to fix that!!!)
+        # catcher object (to prevent laser from firing into wall)
         self.catcher = LaserCatcher(pygame.math.Vector2(catcher_pos.x * constants.VIRTUAL_TILE, catcher_pos.y * constants.VIRTUAL_TILE), direction)
 
         # beam rect between laser and catcher
         self.beam_rect: pygame.Rect = self.gen_laser()
 
-        # countdown until next damage tick
+        # countdown for how often laser damages player
         self.damage_countdown: float = 0
 
-        # fusebox reference (for disabling laser)
+        # fusebox reference
         self.fusebox: Fusebox = Fusebox(fusebox_pos, self)
 
-    # dynamically generate laser beam between laser and catcher (no matter where either are)
+    # generate laser beam rect between this laser and its catcher
     def gen_laser(self):
 
-        # thickness of laser beam (likely wont be float so cast is useless but uncasted division is scary!!!)
+        # beam thickness
         thickness: int = int(constants.VIRTUAL_TILE / 8)
 
         # horizontal laser
         if self.direction.vector.x != 0:
-            
-            # laser positions
             x: int = self.collision_rect.centerx
-            y: int = int(self.collision_rect.centery - thickness / 2) # halved to keep centered
-
-            # laser dimensions
-            width: int = abs(self.catcher.collision_rect.centerx - self.collision_rect.centerx) # absolute distance between laser and catcher (no need to cast to int since rects can't hold floats)
+            y: int = int(self.collision_rect.centery - thickness / 2)
+            width: int = abs(self.catcher.collision_rect.centerx - self.collision_rect.centerx)
             height: int = thickness
-            
-            # adjust x for left-facing laser (x has to be topLEFT for drawing)
+
+            # adjust left-facing beam to start further left
             if self.direction.vector.x < 0:
                 x -= width
-        
+
         # vertical laser
         else:
-
-            # laser pos
-            x: int = int(self.collision_rect.centerx - thickness / 2) # halved to keep centered (on x axis this time)
+            x: int = int(self.collision_rect.centerx - thickness / 2)
             y: int = self.collision_rect.centery
-
-            # laser dimensions
             width: int = thickness
-            height:int = abs(self.catcher.collision_rect.centery - self.collision_rect.centery) # absolute distance between laser and catcher
-            
-            # adjust y for up-facing laser (y has to be TOPleft for drawing)
+            height: int = abs(self.catcher.collision_rect.centery - self.collision_rect.centery)
+
+            # adjust upward beam
             if self.direction.vector.y < 0:
                 y -= height
 
-        # return rect
         return pygame.Rect(x, y, width, height)
 
-    # update laser enemy
+    # update laser logic
     def update(self, dt: float, game: GameWindow):
-
-        # update superclass
         super().update(dt)
-
-        # update catcher
         self.catcher.update()
+        self.fusebox.update()
 
-        # update damage countdown (ensuring countdown never goes negative)
+        # handle minigame completion and animation transition
+        if self.fusebox.window.state == HackState.PASSED:
+            if self.current_animation == self.animations["disabled"]:
+                return  # already fully deactivated
+
+            # play deactivation animation if not already in it
+            if self.current_animation != self.animations["deactive"]:
+                self.current_animation = [pygame.transform.rotate(frame, self.direction.img_angle) for frame in self.animations["deactive"]]
+                self.current_frame = 0
+
+            # step through deactivation animation
+            elif self.current_frame < len(self.current_animation) - 1:
+                self.current_frame += 1
+
+            # switch to disabled animation after deactivation completes
+            else:
+                self.current_animation = [pygame.transform.rotate(frame, self.direction.img_angle) for frame in self.animations["disabled"]]
+                self.current_frame = 0
+
+            return  # stop beam logic while disabled
+
+        # decrement damage cooldown
         self.damage_countdown -= min(dt, self.damage_countdown)
 
-        # if beam collides with player 
+        # damage player if colliding with beam
         if self.beam_rect.colliderect(game.player.collision_rect) and self.damage_countdown == 0:
-            game.player.hit(20) # hit player (every 3 seconds)
-            game.trigger_alarm() # trigger alarm
+            game.player.hit(20)
+            game.trigger_alarm()
+            self.damage_countdown = 3
 
-            self.damage_countdown = 3 # reset damage_countdown to 3 seconds
-    
+        # reset cooldown if no longer colliding
+        elif not self.beam_rect.colliderect(game.player.collision_rect):
+            self.damage_countdown = 0
+
     # draw laser
     def draw(self, surface: pygame.Surface):
         img: pygame.Surface = self.current_animation[self.current_frame]
         super().draw(surface, img)
 
-        pygame.draw.rect(surface, (200, 10, 10), self.beam_rect)
+        # only draw beam if still active
+        if self.active:
+            pygame.draw.rect(surface, (200, 10, 10), self.beam_rect)
 
         # draw fusebox
         self.fusebox.draw(surface)
@@ -129,7 +146,6 @@ class LaserCatcher(GameObject):
     
     # update
     def update(self):
-        print(self.current_frame)
         if self.current_frame < len(self.current_animation) - 1:
             super().update()
 

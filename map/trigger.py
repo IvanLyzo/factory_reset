@@ -12,10 +12,8 @@ class Trigger:
         self.triggered: bool = False  # Tracks if the player is already in the trigger
 
     def check(self, player: Player):
-
         # Check if the player's collision area intersects this trigger
         if self.rect.colliderect(player.collision_rect):
-
             # If player enters and it hasn't been triggered yet, activate
             if not self.triggered:
                 self.on_enter()
