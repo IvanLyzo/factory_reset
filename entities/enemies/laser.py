@@ -1,4 +1,4 @@
-# imports used to delay certain module imports to avoid ciruclar import
+# imports used to delay certain module imports to avoid circular import
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
@@ -29,8 +29,10 @@ class Laser(Enemy):
         self.direction: Direction = direction
 
         # TODO: art: art for catcher and laser
-        self.animations["fire"] = utils.load_animation("enemies/turret")
-        self.current_animation: list[pygame.Surface] = [pygame.transform.rotate(frame, self.direction.img_angle) for frame in self.animations["fire"]]
+        self.animations["active"] = utils.load_animation("enemies/laser/active", 1)
+        self.animations["disabled"] = utils.load_animation("enemies/laser/disabled", 1)
+        self.animations["deactive"] = utils.load_animation("enemies/laser/deactivate")
+        self.current_animation: list[pygame.Surface] = [pygame.transform.rotate(frame, self.direction.img_angle) for frame in self.animations["active"]]
 
         # catcher enemy (laser cant just shoot into the wall - think of all the company expenses it would take to fix that!!!)
         self.catcher = LaserCatcher(pygame.math.Vector2(catcher_pos.x * constants.VIRTUAL_TILE, catcher_pos.y * constants.VIRTUAL_TILE), direction)
@@ -48,7 +50,7 @@ class Laser(Enemy):
     def gen_laser(self):
 
         # thickness of laser beam (likely wont be float so cast is useless but uncasted division is scary!!!)
-        thickness: int = int(constants.VIRTUAL_TILE / 4)
+        thickness: int = int(constants.VIRTUAL_TILE / 8)
 
         # horizontal laser
         if self.direction.vector.x != 0:
@@ -86,10 +88,6 @@ class Laser(Enemy):
     # update laser enemy
     def update(self, dt: float, game: GameWindow):
 
-        # if fusebox was activated, tell gamewindow to start minigame
-        if self.fusebox.activated:
-            game.start_minigame(self.fusebox)
-
         # update superclass
         super().update(dt)
 
@@ -126,9 +124,15 @@ class LaserCatcher(GameObject):
         self.direction: Direction = direction
 
         # setup animation fields for LaserCatcher (inherited from superclass GameObject)
-        self.animations["fire"] = utils.load_animation("enemies/turret")
-        self.current_animation: list[pygame.Surface] = [pygame.transform.rotate(frame, (self.direction.img_angle + 180) % 360) for frame in self.animations["fire"]]
+        self.animations["idle"] = utils.load_animation("enemies/laser/catcher", 1)
+        self.current_animation: list[pygame.Surface] = [pygame.transform.rotate(frame, (self.direction.img_angle + 180) % 360) for frame in self.animations["idle"]]
     
+    # update
+    def update(self):
+        print(self.current_frame)
+        if self.current_frame < len(self.current_animation) - 1:
+            super().update()
+
     # draw LaserCatcer
     def draw(self, surface: pygame.Surface):
         img: pygame.Surface = self.current_animation[self.current_frame] # get current animation frame

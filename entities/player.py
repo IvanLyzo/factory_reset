@@ -1,4 +1,4 @@
-# imports used to delay certain module imports to avoid ciruclar import
+# imports used to delay certain module imports to avoid circular import
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
@@ -15,6 +15,8 @@ import utils
 from core.gameobject import GameObject
 from entities.enemy import Enemy
 
+from ui.menuwindow import MenuWindow
+
 # user-controlled player class inherits GameObject
 class Player(GameObject):
 
@@ -27,7 +29,7 @@ class Player(GameObject):
         self.health_cap: int = 100 # current player health cap
         self.current_health: int = self.health_cap # current player health
 
-        self.velocity: pygame.math.Vector2 = pygame.math.Vector2(0, 0) # frame velocity
+        self.velocity: pygame.math.Vector2 = pygame.math.Vector2() # frame velocity
         self.speed: int = 50 # speed (px/sec)
 
         # setup animation fields for player (inherited from superclass GameObject)
@@ -41,9 +43,15 @@ class Player(GameObject):
         
         # player variable for left/right movement
         self.flip: bool = False
-    
-    # def hitbox(self):
-    #     return pygame.Rect(self.rect.left, self.rect.top - 8, self.rect.width, self.rect.height + 8)
+
+        # init player ui
+        self.player_ui: MenuWindow = MenuWindow(0, custom_pos=pygame.Rect(constants.VIRTUAL_WIDTH - 120, constants.VIRTUAL_HEIGHT - 80, 100, 60))
+        self.player_ui.add_element(20, "Cap: 100%", constants.p)
+        self.player_ui.add_element(40, "Curr: 100%", constants.p)
+        self.player_ui.active = True
+
+        # countdown before hiding ui
+        self.player_ui_countdown: float = 3
     
     # handle all player-related key input
     def handle_input(self, keys: list[int]):
@@ -72,16 +80,19 @@ class Player(GameObject):
 
     # update player
     def update(self, game: GameWindow, dt: float):
+        self.player_ui_countdown -= min(dt, self.player_ui_countdown)
+        if self.player_ui_countdown == 0:
+            self.player_ui.active = False
 
         # set idle animation if no movement this frame
-        if self.velocity == pygame.math.Vector2(0, 0):
+        if self.velocity == pygame.math.Vector2():
             self.current_animation = self.animations["idle"]
 
         # superclass update
         super().update()
 
         # perform movement
-        if self.velocity != pygame.math.Vector2(0, 0):
+        if self.velocity != pygame.math.Vector2():
             self.move_to(self.pos + self.velocity * self.speed * dt)
 
         # check for collisions
@@ -116,26 +127,40 @@ class Player(GameObject):
 
     # player emp ability (called by GameWindow)
     def emp(self, enemies: list[Enemy]):
-        player_pos = pygame.math.Vector2(self.rect.center)
-
+        
+        # loop through enemies
         for enemy in enemies:
-            enemy_pos: pygame.math.Vector2 = pygame.math.Vector2(enemy.rect.center)
-            distance: float = player_pos.distance_to(enemy_pos)
+            distance: float = self.pos.distance_to(enemy.pos) # distance from player to enemy
 
+            # if in range, disable enemy for some time
             if distance < constants.EMP_RANGE:
                 enemy.disable(constants.EMP_TIME)
 
+    # hit function called to indicate damage player took
     def hit(self, dmg: int):
+        
+        # apply damage
         self.current_health -= min(dmg, self.current_health)
 
+        # if died once
         if self.current_health == 0:
-            self.died = True
-            self.health_cap -= min(25, self.health_cap)
+            self.died = True # set flag
+            self.health_cap -= min(25, self.health_cap) # lower player cap
 
+            # if perma-death
             if self.health_cap == 0:
-                self.active = False
+                self.active = False # disable player
             
+            # update current health to cap
             self.current_health = self.health_cap
+
+        # update player ui
+        self.player_ui.text[0].text = "Cap: " + str(self.health_cap) + "%"
+        self.player_ui.text[1].text = "Curr: " + str(self.current_health) + "%"
+
+        # show ui for another 3 seconds (then disappear to not cover screen)
+        self.player_ui.active = True
+        self.player_ui_countdown = 3
 
     # draw player
     def draw(self, surface: pygame.Surface):

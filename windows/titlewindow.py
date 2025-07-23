@@ -6,6 +6,8 @@ if TYPE_CHECKING:
 
 import pygame
 
+import constants
+
 from windows.gamewindow import GameWindow
 from windows.optionswindow import OptionsWindow
 
@@ -15,21 +17,28 @@ class TitleWindow(MenuWindow):
 
     def __init__(self, game: Game):
         super().__init__(0)
+        
+        # reference to main game instance
         self.game: Game = game
 
-        self.add_element(60, "Factory Reset", self.game.title_font)
+        # title text element
+        self.add_element(60, "Factory Reset", constants.h1)
 
-        self.add_element(120, "Start", self.game.normal_font, callback=self.play)
-        self.add_element(160, "Options", self.game.normal_font, callback=self.options)
-        self.add_element(200, "Quit", self.game.normal_font, callback=game.quit)
+        # menu options with callbacks
+        self.add_element(120, "Start", constants.p, callback=self.play)
+        self.add_element(160, "Options", constants.p, callback=self.options)
+        self.add_element(200, "Quit", constants.p, callback=game.quit)
 
+    # start the game by switching to GameWindow
     def play(self):
-        self.game.change_scene(GameWindow(self.game))
+        self.game.change_window(GameWindow(self.game))
     
+    # open the options menu
     def options(self):
-        self.game.change_scene(OptionsWindow(self.game))
+        self.game.change_window(OptionsWindow(self.game))
 
     def handle_event(self, event: pygame.event.Event):
+        # delegate event handling to MenuWindow
         super().handle_event(event)
 
     def update(self, dt: float):

@@ -1,4 +1,4 @@
-# imports used to delay certain module imports to avoid ciruclar import
+# imports used to delay certain module imports to avoid circular import
 from __future__ import annotations
 from typing import TYPE_CHECKING
 

@@ -25,11 +25,15 @@ pygame.display.set_caption("Factory Reset")
 # set game clock
 clock: pygame.time.Clock = pygame.time.Clock()
 
-# create game
-game: Game = Game()
-
 # load tile images into enum
 TileType.load_images()
+
+# load fonts
+constants.h1 = pygame.font.Font("assets/PressStart2P-Regular.ttf", 16)
+constants.p = pygame.font.Font("assets/PressStart2P-Regular.ttf", 8)
+
+# create game
+game: Game = Game()
 
 # quit game function
 def quit_game():
