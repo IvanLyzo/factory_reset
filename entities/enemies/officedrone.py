@@ -76,9 +76,9 @@ class OfficeDrone(Enemy):
         if self.pos == self.targets[self.target_index]:
             self.target_index = (self.target_index + 1) % len(self.targets)
         
-        # check if "found" player
+        # check if "found" player and passive (if agro what's the point, player already spotted)
         body: pygame.Rect = pygame.Rect(self.pos.x, self.pos.y, constants.VIRTUAL_TILE, constants.VIRTUAL_TILE)
-        if body.colliderect(game.player.collision_rect):
+        if body.colliderect(game.player.collision_rect) and self.current_animation == self.animations["passive"]:
             game.trigger_alarm() # trigger game alarm
 
     # draw drone

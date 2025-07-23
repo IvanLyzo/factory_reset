@@ -55,8 +55,17 @@ class GameWindow(Window):
         # Death menu UI window setup
         self.death_menu: MenuWindow = MenuWindow(40, parent=self)
         self.death_menu.add_element(20, "Game Over", constants.h1)
-        self.death_menu.add_element(80, "Restart", constants.p, callback=self.restart)
+        self.death_menu.add_element(60, "Restart", constants.p, callback=self.restart)
         self.death_menu.add_element(100, "Quit", constants.p, callback=self.return_main)
+
+        # Announcement menu UI window setup
+        self.announcement_queue: list[str] = []
+
+        self.announcement_menu: MenuWindow = MenuWindow(0, parent=self, custom_pos=pygame.Rect(40, 20, self.rect.width - 80, 40))
+        self.announcement_menu.add_element(20, "", constants.p)
+
+        # Countdown before hiding announcement ui
+        self.announcement_ui_countdown: float = 0
 
         # Player instance, positioned initially at (1, 1) grid coordinate
         self.player: Player = Player(pygame.math.Vector2(1, 1))
@@ -69,7 +78,7 @@ class GameWindow(Window):
         
         # Track current floor number and generate floor 2 at start
         self.current_floor: int = 0
-        self.gen_floor(2)
+        self.gen_floor(1)
         
     def gen_floor(self, floor: int):
         # Update current floor index
@@ -77,6 +86,10 @@ class GameWindow(Window):
 
         # Create Floor object for the given floor number
         self.floor: Floor = Floor(self, floor)
+
+        # Announce Floor number
+        if floor > 1:
+            self.announcement_queue.append("You've reached floor " + str(floor) + "!")
 
         # Move player to spawn point on the floor, scaled by tile size
         self.player.move_to(pygame.math.Vector2(self.floor.player_spawn.x * constants.VIRTUAL_TILE, self.floor.player_spawn.y * constants.VIRTUAL_TILE))
@@ -93,6 +106,14 @@ class GameWindow(Window):
             # Move player to center of the door's rectangle
             self.player.move_to(pygame.math.Vector2(door.rect.left, door.rect.top))
     
+    def announce(self):
+        if self.announcement_queue and not self.announcement_menu.active:
+
+            self.announcement_menu.text[0].text = self.announcement_queue.pop(0)
+
+            self.announcement_menu.active = True
+            self.announcement_ui_countdown = 3
+
     def restart(self):
         # Restart game by creating a fresh GameWindow instance
         self.game.change_window(GameWindow(self.game))
@@ -104,6 +125,9 @@ class GameWindow(Window):
     def trigger_alarm(self):
         # Disable stealth mode (trigger alarm state)
         self.stealth = False
+
+        # Announce alarm
+        self.announcement_queue.append("Uh oh! You're not working!")
     
     def start_minigame(self, window: HackWindow):
         # Switch state to minigame and set current minigame window
@@ -120,6 +144,7 @@ class GameWindow(Window):
                 # Escape key toggles pause menu
                 if event.key == pygame.K_ESCAPE:
                     self.pause_menu.toggle()
+                    self.game_state = GameState.PAUSED
 
                 # 'E' key interaction with fuseboxes for lasers
                 if event.key == pygame.K_e:
@@ -186,6 +211,19 @@ class GameWindow(Window):
                 for enemy in self.floor.enemies:
                     enemy.update(dt, self)
 
+                # Handle announcements
+                if self.announcement_menu.active:
+                    self.announcement_ui_countdown -= min(dt, self.announcement_ui_countdown)
+
+                    print(self.announcement_ui_countdown)
+                    
+                    # disable announcement
+                    if self.announcement_ui_countdown == 0:
+                        self.announcement_menu.active = False
+
+                # announce next message (if exists)
+                self.announce()
+
             case GameState.MINIGAME:
                 if self.minigame is not None:
                     # Update minigame window
@@ -196,7 +234,11 @@ class GameWindow(Window):
                         self.game_state = GameState.PLAY
                         
                         if self.minigame.state is HackState.FAILED:
+                            self.announcement_queue.append("Oopsies! Hack unsuccessfull!")
                             self.trigger_alarm()
+
+                        else:
+                            self.announcement_queue.append("Hack successfull!")
 
     def draw(self, screen: pygame.Surface):
         # Draw floor tiles (no 3D effect)
@@ -214,6 +256,9 @@ class GameWindow(Window):
         
         # Draw player's UI window
         self.player.player_ui.draw(screen)
+
+        # Draw announcement UI window
+        self.announcement_menu.draw(screen)
 
         # Draw UI windows based on game state
         match self.game_state:

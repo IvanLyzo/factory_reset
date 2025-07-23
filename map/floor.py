@@ -52,15 +52,10 @@ class Floor:
 
             for x, type in enumerate(row):
                 pos = pygame.math.Vector2(x, y) # vector position
-                
-                # generate tile based on code
-                match type:
-                    case 0:
-                        self.tilemap[y].append(Tile(pos, TileType.FLOOR))
-                    case 1:
-                        self.tilemap[y].append(Tile(pos, TileType.WALL))
-                    case 2:
-                        self.tilemap[y].append(Tile(pos, TileType.ROOF))
+                tile_type = TileType.get_by_code(type) # tile type
+
+                # create tile
+                self.tilemap[y].append(Tile(pos, grid, tile_type))
 
     # creates the elevator trigger if the room has one
     def gen_elevator(self, elevator_data: dict[str, Any] | None, game: GameWindow):

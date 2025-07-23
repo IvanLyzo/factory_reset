@@ -13,7 +13,9 @@ import constants
 import utils
 
 from core.gameobject import GameObject
+
 from entities.enemy import Enemy
+from entities.enemies.officedrone import OfficeDrone
 
 from ui.menuwindow import MenuWindow
 
@@ -130,6 +132,9 @@ class Player(GameObject):
         
         # loop through enemies
         for enemy in enemies:
+            if not isinstance(enemy, OfficeDrone):
+                return
+
             distance: float = self.pos.distance_to(enemy.pos) # distance from player to enemy
 
             # if in range, disable enemy for some time
